@@ -11,7 +11,6 @@ struct menuItemType {
 
 void getData(menuItemType menuList[], int &count) {
     ifstream file("menu.txt");
-
     count = 0;
 
     if (!file) {
@@ -19,9 +18,9 @@ void getData(menuItemType menuList[], int &count) {
         return;
     }
 
-    while (getline(file, menuList[count].menuItem)) {
+    while (count < 20 && getline(file, menuList[count].menuItem)) {
         file >> menuList[count].menuPrice;
-        file.ignore();
+        file.ignore(1000, '\n');
         count++;
     }
 
@@ -31,7 +30,7 @@ void getData(menuItemType menuList[], int &count) {
 void showMenu(menuItemType menuList[], int count) {
     cout << fixed << setprecision(2);
 
-    cout << "Sveiki atvyke i restorana \"HiderRes\"\n\n";
+    cout << "\nSveiki atvyke i restorana \"HiderRes\"\n\n";
     cout << "MENIU:\n";
 
     for (int i = 0; i < count; i++) {
@@ -40,68 +39,100 @@ void showMenu(menuItemType menuList[], int count) {
              << menuList[i].menuPrice << " EUR\n";
     }
 
-    cout << "\nPasirinkite patiekalo numeri ir porciju kieki.\n";
-    cout << "Jei norite baigti, iveskite 0.\n";
+    cout << "\n0  - gauti ceki\n";
+    cout << "-1 - iseiti be cekio\n";
 }
 
-void printCheck(menuItemType menuList[], int count) {
-    ofstream receipt("receipt.txt");
-
-    int nr, kiekis;
+void printCheck(menuItemType menuList[], int count, int staliukas) {
+    int pasirinkimas, kiekis;
     double suma = 0;
+    string cekis = "";
 
     cout << fixed << setprecision(2);
-    receipt << fixed << setprecision(2);
-
-    cout << "\nJusu uzsakymas:\n";
-    receipt << "Restoranas HiderRes\n\n";
-    receipt << "Jusu uzsakymas:\n";
 
     while (true) {
-        cout << "\nPatiekalo numeris: ";
-        cin >> nr;
+        cout << "\nKa noretumete uzsisakyti? Iveskite meniu numeri: ";
+        cin >> pasirinkimas;
 
-        if (nr == 0) break;
+        if (pasirinkimas == -1) {
+            cout << "\nAciu, viso gero! Sugrizkite dar!\n";
+            return;
+        }
 
-        if (nr < 1 || nr > count) {
+        if (pasirinkimas == 0) {
+            string failoPavadinimas = "cekis_" + to_string(staliukas) + ".txt";
+            ofstream receipt(failoPavadinimas);
+
+            double pvm = suma * 0.21;
+            double galutine = suma + pvm;
+
+            cout << "\n--- CEKIS ---\n";
+            cout << "Restoranas HiderRes\n";
+            cout << "Staliuko numeris: " << staliukas << "\n\n";
+            cout << cekis;
+            cout << "\nMokesciai (21%): " << pvm << " EUR\n";
+            cout << "Galutine suma: " << galutine << " EUR\n";
+            cout << "Aciu, sugrizkite dar!\n";
+
+            receipt << fixed << setprecision(2);
+            receipt << "--- CEKIS ---\n";
+            receipt << "Restoranas HiderRes\n";
+            receipt << "Staliuko numeris: " << staliukas << "\n\n";
+            receipt << cekis;
+            receipt << "\nMokesciai (21%): " << pvm << " EUR\n";
+            receipt << "Galutine suma: " << galutine << " EUR\n";
+            receipt << "Aciu, sugrizkite dar!\n";
+
+            receipt.close();
+
+            cout << "\nCekis issaugotas faile: " << failoPavadinimas << endl;
+            return;
+        }
+
+        if (pasirinkimas < 1 || pasirinkimas > count) {
             cout << "Tokio patiekalo nera!\n";
         } else {
-            cout << "Porciju kiekis: ";
+            cout << "Kiek porciju noretumete? ";
             cin >> kiekis;
 
-            double kaina = menuList[nr - 1].menuPrice * kiekis;
-            suma += kaina;
+            if (kiekis <= 0) {
+                cout << "Porciju kiekis turi buti didesnis uz 0.\n";
+            } else {
+                double vienetoKaina = menuList[pasirinkimas - 1].menuPrice;
+                double bendraKaina = vienetoKaina * kiekis;
+                suma += bendraKaina;
 
-            cout << kiekis << " " << menuList[nr - 1].menuItem
-                 << " - " << kaina << " EUR\n";
+                cout << kiekis << " x " << menuList[pasirinkimas - 1].menuItem
+                     << " | vnt. kaina: " << vienetoKaina
+                     << " EUR | suma: " << bendraKaina << " EUR\n";
 
-            receipt << kiekis << " " << menuList[nr - 1].menuItem
-                    << " - " << kaina << " EUR\n";
+                cekis += to_string(kiekis) + " x " +
+                         menuList[pasirinkimas - 1].menuItem +
+                         " | vnt. kaina: " + to_string(vienetoKaina) +
+                         " EUR | suma: " + to_string(bendraKaina) + " EUR\n";
+            }
         }
     }
-
-    double pvm = suma * 0.21;
-    double galutine = suma + pvm;
-
-    cout << "\nMokesciai (21%): " << pvm << " EUR\n";
-    cout << "Galutine suma: " << galutine << " EUR\n";
-
-    receipt << "\nMokesciai (21%): " << pvm << " EUR\n";
-    receipt << "Galutine suma: " << galutine << " EUR\n";
-
-    receipt.close();
 }
 
 int main() {
     menuItemType menuList[20];
     int count;
+    int staliukas;
 
     getData(menuList, count);
 
     if (count > 0) {
+        cout << "Iveskite staliuko numeri: ";
+        cin >> staliukas;
+
         showMenu(menuList, count);
-        printCheck(menuList, count);
+        printCheck(menuList, count, staliukas);
     }
+
+    cout << "\nSpauskite Enter, kad uzdarytumete programa...";
+    cin.ignore(1000, '\n');
+    cin.get();
 
     return 0;
 }

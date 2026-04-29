@@ -1,0 +1,10 @@
+--- CEKIS ---
+Restoranas HiderRes
+Staliuko numeris: 4
+
+1 x Kiausiniene | vnt. kaina: 1.450000 EUR | suma: 1.450000 EUR
+1 x Pusryciu dribsniai | vnt. kaina: 0.690000 EUR | suma: 0.690000 EUR
+
+Mokesciai (21%): 0.45 EUR
+Galutine suma: 2.59 EUR
+Aciu, sugrizkite dar!
